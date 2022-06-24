@@ -9,6 +9,9 @@ import com.example.coldstarttestapp.data.db.MainDataBase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.DateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,12 +19,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+         var isColdStart = false
         if(savedInstanceState == null){
-
+            isColdStart = true
         }
 
         CoroutineScope(Dispatchers.IO).launch {
-            val count = getCountFromBd()
+            val count = getCountFromBd(isColdStart)
             withContext(Dispatchers.Main) {
                 showToastWithCount(count)
             }
@@ -33,29 +37,32 @@ class MainActivity : AppCompatActivity() {
         savedInstanceState.putBoolean("hahaNotCold", true)
     }
 
-    fun showToastWithCount(countInt: Int) {
+    private fun showToastWithCount(countInt: Int) {
         if (countInt == 3) {
             val toast = Toast.makeText(
                 applicationContext,
                 "Cold start number $countInt",
                 Toast.LENGTH_SHORT
             )
-
             toast.show()
         }
     }
 
-    private suspend fun getCountFromBd(isColdStart: Boolean): Int {
+    private fun getCountFromBd(isColdStart: Boolean): Int {
         val db = Room.databaseBuilder(
             applicationContext,
             MainDataBase::class.java, "database-name"
         ).build()
 
-        val coldStartDao = it.ColdStartDao()
+        val coldStartDao = db.ColdStartDao()
         val count = coldStartDao.getColdStartCount() + 1
-        if(){
+        if(isColdStart){
             coldStartDao.insertColdStart(ColdStart(count, getCurrentTime()))
         }
+        return count
+    }
 
+    private fun getCurrentTime(): String {
+        return DateFormat.getDateInstance().format(Date())
     }
 }
