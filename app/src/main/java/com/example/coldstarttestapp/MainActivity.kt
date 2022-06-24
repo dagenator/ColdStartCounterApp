@@ -4,12 +4,11 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
-import com.example.coldstarttestapp.data.app.MyApp
+import com.example.coldstarttestapp.data.db.ColdStart
 import com.example.coldstarttestapp.data.db.MainDataBase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -17,37 +16,46 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        if(savedInstanceState == null){
+
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             val count = getCountFromBd()
-            withContext(Dispatchers.Main){
+            withContext(Dispatchers.Main) {
                 showToastWithCount(count)
             }
         }
     }
 
-    fun showToastWithCount(countInt: Int?) {
-        if(countInt == 3){
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        savedInstanceState.putBoolean("hahaNotCold", true)
+    }
+
+    fun showToastWithCount(countInt: Int) {
+        if (countInt == 3) {
             val toast = Toast.makeText(
                 applicationContext,
                 "Cold start number $countInt",
                 Toast.LENGTH_SHORT
             )
-            toast.show()
-        }else if(countInt == null ){
-            val toast = Toast.makeText(
-                applicationContext,
-                "Error with local bd",
-                Toast.LENGTH_SHORT
-            )
+
             toast.show()
         }
     }
 
-    private fun getCountFromBd(): Int? {
-        MyApp.db?.let {
-            val coldStartDao = it.ColdStartDao()
-            return coldStartDao.getColdStartCount()
+    private suspend fun getCountFromBd(isColdStart: Boolean): Int {
+        val db = Room.databaseBuilder(
+            applicationContext,
+            MainDataBase::class.java, "database-name"
+        ).build()
+
+        val coldStartDao = it.ColdStartDao()
+        val count = coldStartDao.getColdStartCount() + 1
+        if(){
+            coldStartDao.insertColdStart(ColdStart(count, getCurrentTime()))
         }
-        return null
+
     }
 }

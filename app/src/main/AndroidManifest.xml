@@ -3,8 +3,6 @@
     package="com.example.coldstarttestapp">
 
     <application
-        android:name=".data.app.MyApp"
-        android:debuggable="true"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
